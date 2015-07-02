@@ -36,7 +36,11 @@ class Robot
 
   def pick_up(item)
     if can_pickup?(item)
-      @equipped_weapon = item if item.is_a?(Weapon)
+      if item.is_a?(Weapon)
+        @equipped_weapon = item 
+      elsif should_feed?(item)
+        item.feed(self)
+      end
       @items << item
     end
   end
@@ -73,9 +77,14 @@ class Robot
 
   def attack(enemy)
     unless equipped_weapon
+      return unless in_range?(enemy, 1)
       enemy.wound(@attack_points)
     else
+      return unless in_range?(enemy, equipped_weapon.range)
       equipped_weapon.hit(enemy)
+      if equipped_weapon.empty?
+        @equipped_weapon = nil
+      end
     end
   end
 
@@ -96,6 +105,24 @@ class Robot
   private
     def can_pickup?(item)
       items_weight + item.weight <= MAX_WEIGHT
+    end
+
+    def should_feed?(item)
+      if item.class.method_defined? :feed
+        self.health + item.class::HEALING_POWER <= MAX_HEALTH
+      end
+    end
+
+    def in_range?(unit, range)
+      range_horizontal?(unit, range) && range_vertical?(unit, range)
+    end
+
+    def range_horizontal?(unit, range)
+      (@position[0] - unit.position[0]).abs <= range
+    end
+
+    def range_vertical?(unit, range)
+      (@position[1] - unit.position[1]).abs <= range
     end
 
 end
