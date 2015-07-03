@@ -36,19 +36,35 @@ class Robot
     @position[1] -= 1 
   end
 
+  def items_weight
+    @items.inject(0){|sum,i| sum += i.weight }
+  end
+
   def pick_up(item)
     if can_pickup?(item)
-      if item.is_a?(Weapon)
-        @equipped_weapon = item 
-      elsif should_feed?(item)
-        item.feed(self)
+      case item.class.superclass.name
+      when "Weapon"
+        pick_up_weapon(item)
+      when "Item"
+        pick_up_item(item)
       end
       @items << item
     end
   end
 
-  def items_weight
-    @items.inject(0){|sum,i| sum += i.weight }
+  def pick_up_weapon(weapon)
+    if @equipped_weapon == nil
+      @equipped_weapon = weapon 
+    end
+  end
+
+  def pick_up_item(item)
+    if should_feed?(item)
+      item.feed(self)
+    end
+    if should_charge?(item)
+      item.charge(self)
+    end
   end
 
   def wound(damage)
@@ -88,6 +104,10 @@ class Robot
     end
   end
 
+  def charge_shields
+    @shields = MAX_SHIELDS
+  end
+
   def attack(enemy)
     unless equipped_weapon
       return unless in_range?(enemy, 1)
@@ -124,6 +144,10 @@ class Robot
       if item.class.method_defined? :feed
         self.health + item.class::HEALING_POWER <= MAX_HEALTH
       end
+    end
+
+    def should_charge?(item)
+      item.is_a?(Battery)
     end
 
     def in_range?(unit, range)
