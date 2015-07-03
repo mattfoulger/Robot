@@ -11,6 +11,8 @@ class Robot
   attr_reader :items, :health, :position, :attack_points, :shields
   attr_accessor :equipped_weapon
 
+  @@robots = []
+
   def initialize
     @position = [0,0]
     @items = []
@@ -153,5 +155,27 @@ class Robot
     def in_range?(unit, range)
       Math.sqrt(((@position[0] - unit.position[0]) ** 2) + ((@position[1] - unit.position[1]) ** 2)) <= range
     end
+  
+  class << self
+
+    def create
+      @@robots << Robot.new
+      @@robots.last
+    end
+
+    def robots
+      @@robots
+    end
+
+    def robots=(value)
+      @@robots = value
+    end
+
+    def in_position(x,y)
+      @@robots.select { |robot| robot.position == [x,y]}
+    end
+
+  end
+
 
 end
