@@ -7,7 +7,8 @@ class Robot
   MAX_WEIGHT = 250
   MAX_HEALTH = 100
   MIN_HEALTH = 0
-  attr_reader :items, :health, :position, :attack_points
+  MAX_SHIELDS = 50
+  attr_reader :items, :health, :position, :attack_points, :shields
   attr_accessor :equipped_weapon
 
   def initialize
@@ -16,6 +17,7 @@ class Robot
     @health = 100
     @attack_points = 5
     @equipped_weapon = nil
+    @shields = 50
   end
 
   def move_left
@@ -50,10 +52,21 @@ class Robot
   end
 
   def wound(damage)
-    @health -= damage
+    bleed = damage - shield_damage(damage)
+    @health -= bleed
     if @health < MIN_HEALTH
       @health = MIN_HEALTH
     end
+  end
+
+  def shield_damage(damage)
+    # return 0 if shields == 0
+    shield_bleed = damage
+    if shield_bleed > @shields
+      shield_bleed = @shields
+    end
+    @shields -= shield_bleed
+    shield_bleed
   end
 
   def heal(healing)
@@ -114,15 +127,7 @@ class Robot
     end
 
     def in_range?(unit, range)
-      range_horizontal?(unit, range) && range_vertical?(unit, range)
-    end
-
-    def range_horizontal?(unit, range)
-      (@position[0] - unit.position[0]).abs <= range
-    end
-
-    def range_vertical?(unit, range)
-      (@position[1] - unit.position[1]).abs <= range
+      Math.sqrt(((@position[0] - unit.position[0]) ** 2) + ((@position[1] - unit.position[1]) ** 2)) <= range
     end
 
 end
